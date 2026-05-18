@@ -11,10 +11,12 @@ import pandas as pd
 import streamlit as st
 from fixtures import REPORTS
 from utils import get_pages, full_text
+from ui import brand_sidebar, brand_footer
 
 st.set_page_config(page_title="Extraction Strategy Comparison", layout="wide", page_icon="🔬")
+brand_sidebar()
 
-st.title("🔬 Extraction Strategy Comparison")
+st.title("Extraction Strategy Comparison")
 st.caption("Four strategies on the same report — from dumb text search to full LLM extraction")
 st.divider()
 
@@ -215,3 +217,5 @@ with c4:
 
 if report.get("validation_issues"):
     st.warning("**This report:** " + "  \n".join(report["validation_issues"]))
+
+brand_footer()

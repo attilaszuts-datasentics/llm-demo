@@ -5,6 +5,7 @@ Entry point for Streamlit Community Cloud: streamlit run Home.py
 import fitz
 import streamlit as st
 from fixtures import REPORTS
+from ui import inject_brand_css, brand_footer
 
 st.set_page_config(
     page_title="Report Extraction Workshop",
@@ -12,6 +13,8 @@ st.set_page_config(
     page_icon="📄",
     initial_sidebar_state="collapsed",
 )
+
+inject_brand_css()
 
 # ── Thumbnail helper ──────────────────────────────────────────────────────────
 
@@ -114,7 +117,7 @@ st.markdown("## Why LLMs alone aren't enough")
 c1, c2, c3 = st.columns(3)
 with c1:
     with st.container(border=True):
-        st.markdown("### 🎲 They're probabilistic")
+        st.markdown("### Probabilistic by nature")
         st.markdown("""
         Ask the same question twice, get slightly different answers.
         For a summary that's fine. For a yield that feeds a pricing model,
@@ -122,7 +125,7 @@ with c1:
         """)
 with c2:
     with st.container(border=True):
-        st.markdown("### 👻 They hallucinate")
+        st.markdown("### They hallucinate")
         st.markdown("""
         If the information isn't clearly in the text, the model will often
         invent a plausible-sounding value rather than say it doesn't know.
@@ -130,7 +133,7 @@ with c2:
         """)
 with c3:
     with st.container(border=True):
-        st.markdown("### 📦 They don't cite by default")
+        st.markdown("### No citations by default")
         st.markdown("""
         A number without a source is unverifiable. If an extracted figure is
         wrong, you can't tell whether the model misread the document, picked
@@ -236,33 +239,32 @@ d1, d2, d3, d4, d5 = st.columns(5)
 
 with d1:
     with st.container(border=True):
-        st.markdown("### ⚙️ Pipeline")
+        st.markdown("### Pipeline")
         st.markdown("Watch a report travel from raw PDF to validated Delta table, step by step.")
         st.page_link("pages/1_⚙️_Pipeline.py", label="Open demo →")
 
 with d2:
     with st.container(border=True):
-        st.markdown("### 🔬 Compare")
+        st.markdown("### Compare")
         st.markdown("Four extraction strategies on the same report — see where each one wins and fails.")
         st.page_link("pages/2_🔬_Compare.py", label="Open demo →")
 
 with d3:
     with st.container(border=True):
-        st.markdown("### ✅ Review")
+        st.markdown("### Review")
         st.markdown("Low-confidence extractions surface for analyst sign-off, with the source highlighted in the PDF.")
         st.page_link("pages/3_✅_Review.py", label="Open demo →")
 
 with d4:
     with st.container(border=True):
-        st.markdown("### 🧞 Genie")
+        st.markdown("### Genie")
         st.markdown("Ask questions about the extracted data in plain English — Genie writes the SQL.")
         st.page_link("pages/4_🧞_Genie.py", label="Open demo →")
 
 with d5:
     with st.container(border=True):
-        st.markdown("### 📚 How it works")
+        st.markdown("### How it works")
         st.markdown("Prompting patterns, validation techniques, pipeline wiring, gotchas, and doc links.")
         st.page_link("pages/5_📚_How_it_works.py", label="Open guide →")
 
-st.markdown("")
-st.caption("Workshop demo — v0. Service calls are mocked; all data is from real Q1 2025 broker reports.")
+brand_footer()

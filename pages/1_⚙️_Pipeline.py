@@ -9,12 +9,14 @@ import json
 import pandas as pd
 import streamlit as st
 from fixtures import REPORTS, mock_doc_intelligence_response, mock_openai_response
+from ui import brand_sidebar, brand_footer
 
 st.set_page_config(page_title="Ingestion Pipeline", layout="wide", page_icon="⚙️")
+brand_sidebar()
 
 # ── Header ─────────────────────────────────────────────────────────────────
 
-st.title("⚙️ Automated Report Ingestion Pipeline")
+st.title("Automated Report Ingestion Pipeline")
 st.caption("Azure Blob Storage  →  Azure Document Intelligence  →  Azure OpenAI  →  Databricks Delta Lake")
 st.divider()
 
@@ -165,3 +167,5 @@ col1.metric("Fields extracted", len(report["fields"]))
 col2.metric("Auto-approved", valid_count)
 col3.metric("Flagged for review", flagged_count)
 col4.metric("Pipeline duration", "~3.6s")
+
+brand_footer()

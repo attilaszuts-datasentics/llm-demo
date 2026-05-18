@@ -10,8 +10,10 @@ import random
 import pandas as pd
 import streamlit as st
 from fixtures import REPORTS
+from ui import brand_sidebar, brand_footer
 
 st.set_page_config(page_title="Databricks Genie", layout="wide", page_icon="🧞")
+brand_sidebar()
 
 # ── Build a flat "Delta table" from all fixtures ──────────────────────────────
 
@@ -84,7 +86,7 @@ GENIE_QA = [
 
 col_logo, col_title = st.columns([1, 8])
 with col_logo:
-    st.markdown("# 🧞")
+    st.markdown("")
 with col_title:
     st.title("Databricks Genie")
     st.caption("Ask questions about the extracted real estate data in plain English — Genie writes the SQL for you.")
@@ -196,5 +198,7 @@ elif qa["result"] is not None:
 
 # ── Explanation ───────────────────────────────────────────────────────────────
 
-st.markdown("#### 💬 Genie's interpretation")
+st.markdown("#### Genie's interpretation")
 st.info(qa["explanation"])
+
+brand_footer()

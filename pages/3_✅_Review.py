@@ -9,8 +9,10 @@ import fitz  # pymupdf
 import pandas as pd
 import streamlit as st
 from fixtures import REPORTS
+from ui import brand_sidebar, brand_footer
 
 st.set_page_config(page_title="Review Queue", layout="wide", page_icon="✅")
+brand_sidebar()
 
 # ── PDF rendering ─────────────────────────────────────────────────────────────
 
@@ -133,7 +135,7 @@ else:
 
 # ── Header ────────────────────────────────────────────────────────────────────
 
-st.title("✅ Human Review Queue")
+st.title("Human Review Queue")
 st.caption(
     "Every extraction is shown with its source highlighted in the original document. "
     "Approve, reject, or correct the value — without opening the PDF."
@@ -226,3 +228,5 @@ if st.session_state.get("committed"):
             hide_index=True,
             use_container_width=True,
         )
+
+brand_footer()

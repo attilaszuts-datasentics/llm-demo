@@ -3,20 +3,22 @@ How it works — reference guide for the workshop.
 Prompting, validation, pipeline wiring, experimentation, gotchas, and doc links.
 """
 import streamlit as st
+from ui import brand_sidebar, brand_footer
 
 st.set_page_config(page_title="How it works", layout="wide", page_icon="📚")
+brand_sidebar()
 
-st.title("📚 How it works")
+st.title("How it works")
 st.caption("Reference guide — skimmable companion to the demos. Come back to this after the session.")
 st.divider()
 
 tabs = st.tabs([
-    "✍️  Prompting",
-    "✅  Validation",
-    "⚙️  Pipeline",
-    "🧪  Experimentation",
-    "⚠️  Gotchas",
-    "🔗  Docs & links",
+    "Prompting",
+    "Validation",
+    "Pipeline",
+    "Experimentation",
+    "Gotchas",
+    "Docs & links",
 ])
 
 # ── Tab 1: Prompting ──────────────────────────────────────────────────────────
@@ -520,3 +522,5 @@ with tabs[5]:
         "Azure OpenAI docs now live under the Azure AI Foundry path (`/azure/foundry/openai/`). "
         "All Databricks links use the Azure Databricks docs (`learn.microsoft.com/en-us/azure/databricks/`)."
     )
+
+brand_footer()
