@@ -7,7 +7,7 @@ import streamlit as st
 _ROOT = Path(__file__).parent / "assets"
 _LOGO_PATH   = str(_ROOT / "DataSentics_a_Bull_company_white.svg")
 _BULL_B64    = base64.b64encode((_ROOT / "bull_logo.svg").read_bytes()).decode()
-_BULL_IMG_SM = f'<img src="data:image/svg+xml;base64,{_BULL_B64}" width="60" style="display:block;">'
+_BULL_IMG_SM = f'<img src="data:image/svg+xml;base64,{_BULL_B64}" width="90" style="display:block;">'
 
 # Embed Tosh fonts as base64 so they work without a static file server
 _FONTS_DIR = _ROOT / "fonts"
@@ -68,9 +68,15 @@ h4, h5, h6 {{
 section[data-testid="stSidebar"] {{
     background-color: #002870 !important;
 }}
-/* Make all sidebar content white — catch-all for Streamlit's dynamic elements */
+/* White text for all sidebar content */
 section[data-testid="stSidebar"] * {{
     color: rgba(255, 255, 255, 0.9) !important;
+}}
+/* Restore dark text inside input/select widgets — white bg, so text must be dark */
+section[data-testid="stSidebar"] input,
+section[data-testid="stSidebar"] textarea,
+section[data-testid="stSidebar"] [data-baseweb="select"] * {{
+    color: #1a1a1a !important;
 }}
 section[data-testid="stSidebar"] a,
 section[data-testid="stSidebarNavLink"] {{
@@ -82,9 +88,11 @@ section[data-testid="stSidebarNavLink"]:hover {{
 section[data-testid="stSidebar"] hr {{
     border-color: rgba(255, 255, 255, 0.15) !important;
 }}
-/* Warning/error/info boxes in sidebar — keep their background, just ensure text is visible */
-section[data-testid="stSidebar"] [data-testid="stNotification"] * {{
-    color: inherit !important;
+/* Home icon before the first nav link (Home page has no emoji in filename) */
+section[data-testid="stSidebar"] [data-testid="stSidebarNavLink"]:first-child::before {{
+    content: "🏠 ";
+    font-family: system-ui, sans-serif;
+    display: inline;
 }}
 
 /* ── Primary buttons → Bull orange ──────────────────────────────────── */

@@ -106,14 +106,20 @@ for i, (col, qa) in enumerate(zip(cols, GENIE_QA)):
 # ── Free-text input ───────────────────────────────────────────────────────────
 
 st.markdown("")
+st.caption(
+    "Custom questions are matched to the nearest preset by keyword. "
+    "In production, Genie generates SQL against your real Delta tables."
+)
 user_q = st.chat_input("Or type your own question…")
 
 if user_q and triggered_qa is None:
-    # Find closest pre-scripted answer or fall back to a generic one
-    triggered_qa = next(
+    matched = next(
         (qa for qa in GENIE_QA if any(w in user_q.lower() for w in qa["q"].lower().split()[:3])),
-        GENIE_QA[0],
+        None,
     )
+    triggered_qa = matched or GENIE_QA[0]
+    if not matched:
+        st.info(f"No exact match — showing the closest preset: *\"{GENIE_QA[0]['q']}\"*")
 
 if triggered_qa is None:
     st.markdown("#### How Genie works")
