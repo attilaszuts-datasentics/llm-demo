@@ -96,7 +96,7 @@ with st.sidebar:
     st.header("Queue filters")
     THRESHOLD = st.slider("Confidence threshold", 0.0, 1.0, 0.80, 0.05,
                           help="Fields below this threshold appear in the queue")
-    filter_mode = st.radio("Show", ["All fields", "Needs review", "Approved", "Rejected"])
+    filter_mode = st.radio("Show", ["Needs review", "All fields", "Approved", "Rejected"])
     asset_filter = st.multiselect(
         "Asset class",
         sorted({r["asset_class"] for r in all_items}),

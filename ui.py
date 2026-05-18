@@ -120,7 +120,7 @@ button[data-baseweb="tab"][aria-selected="true"] {{
 /* ── Footer — fixed bottom-right watermark ───────────────────────────── */
 .ds-footer {{
     position: fixed;
-    bottom: 16px;
+    bottom: 56px;
     right: 24px;
     z-index: 9999;
     opacity: 0.7;
