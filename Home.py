@@ -10,7 +10,7 @@ from ui import inject_brand_css, brand_footer
 st.set_page_config(
     page_title="Report Extraction Workshop",
     layout="wide",
-    page_icon="📄",
+    page_icon="assets/DS_favicon_color.svg",
     initial_sidebar_state="collapsed",
 )
 

@@ -13,7 +13,7 @@ from fixtures import REPORTS
 from utils import get_pages, full_text
 from ui import brand_sidebar, brand_footer
 
-st.set_page_config(page_title="Extraction Strategy Comparison", layout="wide", page_icon="🔬")
+st.set_page_config(page_title="Extraction Strategy Comparison", layout="wide", page_icon="assets/DS_favicon_color.svg")
 brand_sidebar()
 
 st.title("Extraction Strategy Comparison")

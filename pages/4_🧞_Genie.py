@@ -12,7 +12,7 @@ import streamlit as st
 from fixtures import REPORTS
 from ui import brand_sidebar, brand_footer
 
-st.set_page_config(page_title="Databricks Genie", layout="wide", page_icon="🧞")
+st.set_page_config(page_title="Databricks Genie", layout="wide", page_icon="assets/DS_favicon_color.svg")
 brand_sidebar()
 
 # ── Build a flat "Delta table" from all fixtures ──────────────────────────────

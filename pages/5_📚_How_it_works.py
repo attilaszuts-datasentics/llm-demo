@@ -5,7 +5,7 @@ Prompting, validation, pipeline wiring, experimentation, gotchas, and doc links.
 import streamlit as st
 from ui import brand_sidebar, brand_footer
 
-st.set_page_config(page_title="How it works", layout="wide", page_icon="📚")
+st.set_page_config(page_title="How it works", layout="wide", page_icon="assets/DS_favicon_color.svg")
 brand_sidebar()
 
 st.title("How it works")
