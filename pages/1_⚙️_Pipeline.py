@@ -9,7 +9,7 @@ import json
 import pandas as pd
 import streamlit as st
 from fixtures import REPORTS, mock_doc_intelligence_response, mock_openai_response
-from ui import brand_sidebar, ICON_AZURE_BLOB, ICON_AZURE_DOCINT, ICON_OPENAI, ICON_DATABRICKS
+from ui import brand_sidebar, ICON_AZURE_BLOB, ICON_AZURE_DOCINT, ICON_OPENAI, ICON_DELTA_LAKE
 
 st.set_page_config(page_title="Ingestion Pipeline", layout="wide", page_icon="assets/DS_favicon_color.svg")
 brand_sidebar()
@@ -40,18 +40,22 @@ with st.sidebar:
 # ── Pipeline diagram (always visible) ───────────────────────────────────────
 
 col1, col2, col3, col4 = st.columns(4)
+def _svc_col(icon_html: str, title: str, subtitle: str) -> None:
+    st.markdown(
+        f'<div style="text-align:center">{icon_html}'
+        f'<div style="font-weight:600;margin-top:4px">{title}</div>'
+        f'<div style="font-size:0.8rem;color:#888">{subtitle}</div></div>',
+        unsafe_allow_html=True,
+    )
+
 with col1:
-    st.markdown(ICON_AZURE_BLOB + "**Azure Blob**", unsafe_allow_html=True)
-    st.markdown("Object storage  \n`reports/2025/Q1/`")
+    _svc_col(ICON_AZURE_BLOB, "Azure Blob", "Object storage")
 with col2:
-    st.markdown(ICON_AZURE_DOCINT + "**Doc Intelligence**", unsafe_allow_html=True)
-    st.markdown("Layout + table extraction")
+    _svc_col(ICON_AZURE_DOCINT, "Doc Intelligence", "Layout + tables")
 with col3:
-    st.markdown(ICON_OPENAI + "**Azure OpenAI**", unsafe_allow_html=True)
-    st.markdown("GPT-4o structured extraction")
+    _svc_col(ICON_OPENAI, "Azure OpenAI", "GPT-4o extraction")
 with col4:
-    st.markdown(ICON_DATABRICKS + "**Delta Lake**", unsafe_allow_html=True)
-    st.markdown("Bronze → Silver → Gold")
+    _svc_col(ICON_DELTA_LAKE, "Delta Lake", "Bronze → Silver → Gold")
 
 st.divider()
 

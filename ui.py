@@ -15,17 +15,23 @@ _FONTS_DIR = _ROOT / "fonts"
 _TOSH_BLACK_B64  = base64.b64encode((_FONTS_DIR / "ToshA-Black.woff2").read_bytes()).decode()
 _TOSH_MEDIUM_B64 = base64.b64encode((_FONTS_DIR / "ToshA-Medium.woff2").read_bytes()).decode()
 
-# Service logos — official Azure + Databricks + Genie icons
-def _svg_img(name: str, size: int = 36) -> str:
-    b64 = base64.b64encode((_ROOT / name).read_bytes()).decode()
-    return (f'<img src="data:image/svg+xml;base64,{b64}" '
-            f'width="{size}" height="{size}" style="display:block;margin:0 auto 4px;">')
 
-ICON_AZURE_BLOB  = _svg_img("azure-blob-icon.svg")
-ICON_AZURE_DOCINT = _svg_img("azure-docint-icon.svg")
-ICON_OPENAI      = _svg_img("azure-openai-icon.svg")
-ICON_DATABRICKS  = _svg_img("databricks-icon.svg")
-ICON_GENIE       = _svg_img("genie-icon.svg")
+def _asset_img(name: str, size: int = 52) -> str:
+    """Return an <img> data-URI tag for any asset (SVG or PNG)."""
+    path = _ROOT / name
+    mime = "image/png" if path.suffix.lower() == ".png" else "image/svg+xml"
+    b64 = base64.b64encode(path.read_bytes()).decode()
+    return (f'<img src="data:{mime};base64,{b64}" '
+            f'width="{size}" height="{size}" '
+            f'style="display:block;margin:0 auto 6px;object-fit:contain;">')
+
+
+ICON_AZURE_BLOB   = _asset_img("azure-blob-icon.svg")
+ICON_AZURE_DOCINT = _asset_img("azure-docint-icon.svg")
+ICON_OPENAI       = _asset_img("azure-openai-icon.svg")
+ICON_DATABRICKS   = _asset_img("databricks-icon.svg")
+ICON_DELTA_LAKE   = _asset_img("delta-lake.png")
+ICON_GENIE        = _asset_img("genie-icon.svg")
 
 _CSS = f"""
 <style>
@@ -43,8 +49,10 @@ _CSS = f"""
     src: url('data:font/woff2;base64,{_TOSH_MEDIUM_B64}') format('woff2');
 }}
 
-/* ── Global typography — system font for body (all glyphs, offline-safe) */
-body, p, span, div, label, button, input, textarea, select {{
+/* ── Global typography ───────────────────────────────────────────────── */
+/* NOTE: intentionally omit <span> and <button> — Streamlit uses Material
+   Symbols font on those for icons; overriding them breaks icon rendering. */
+body, p, div, label, input, textarea, select {{
     font-family: system-ui, -apple-system, 'Segoe UI', sans-serif !important;
 }}
 h1, h2, h3 {{
@@ -123,25 +131,25 @@ button[data-baseweb="tab"][aria-selected="true"] {{
 </style>
 """
 
-# JavaScript that injects a 🏠 icon before the first sidebar nav link (Home)
+# JavaScript: inject 🏠 before the first sidebar nav link (Home)
 _HOME_ICON_JS = """
 <script>
 (function() {
-    function injectHomeIcon() {
+    function run() {
         try {
             var doc = window.parent.document;
             var links = doc.querySelectorAll('[data-testid="stSidebarNavLink"]');
-            if (!links.length) { setTimeout(injectHomeIcon, 300); return; }
+            if (!links.length) { setTimeout(run, 300); return; }
             var first = links[0];
             if (!first.dataset.homeIcon) {
                 first.insertAdjacentHTML('afterbegin',
-                    '<span style="margin-right:5px;font-size:1em;">🏠</span>');
+                    '<span style="margin-right:5px;">🏠</span>');
                 first.dataset.homeIcon = '1';
             }
         } catch(e) {}
     }
-    injectHomeIcon();
-    setTimeout(injectHomeIcon, 600);
+    run();
+    setTimeout(run, 800);
 })();
 </script>
 """

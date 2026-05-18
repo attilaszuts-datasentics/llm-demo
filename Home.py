@@ -2,19 +2,14 @@
 Workshop landing page — visual intro to the problem and the demos.
 Entry point for Streamlit Community Cloud: streamlit run Home.py
 """
+import base64
 import fitz
 import streamlit as st
 from fixtures import REPORTS
-import base64
-from ui import inject_brand_css, brand_footer, ICON_AZURE_BLOB, ICON_AZURE_DOCINT, ICON_OPENAI, ICON_DATABRICKS, ICON_GENIE
+from ui import brand_sidebar, brand_footer, ICON_AZURE_BLOB, ICON_AZURE_DOCINT, ICON_OPENAI, ICON_DATABRICKS, ICON_DELTA_LAKE, ICON_GENIE
 
-# Base64-encoded SVG arrow — img tag renders reliably regardless of font
-_ARROW_SVG = (
-    b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22"'
-    b' fill="none" stroke="#999" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">'
-    b'<polyline points="9 18 15 12 9 6"/></svg>'
-)
-_ARROW = f'<img src="data:image/svg+xml;base64,{base64.b64encode(_ARROW_SVG).decode()}" width="22" height="22">'
+# CSS-only right-pointing triangle arrow — no font or SVG needed
+_ARROW = '<div style="width:0;height:0;border-top:9px solid transparent;border-bottom:9px solid transparent;border-left:14px solid #bbb;margin:auto;"></div>'
 
 st.set_page_config(
     page_title="Report Extraction Workshop",
@@ -23,7 +18,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-inject_brand_css()
+brand_sidebar()
 
 # ── Thumbnail helper ──────────────────────────────────────────────────────────
 
@@ -164,24 +159,24 @@ st.markdown("""
 <style>
 .pipe-box {
     border-radius: 10px;
-    padding: 14px 10px;
+    padding: 12px 8px;
     text-align: center;
     color: white;
-    font-size: 0.82rem;
-    line-height: 1.5;
-    height: 90px;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    min-height: 110px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 4px;
 }
+.pipe-box img { flex-shrink: 0; }
 .pipe-arrow {
-    font-size: 1.6rem;
-    color: #888;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 90px;
+    min-height: 110px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -197,7 +192,7 @@ steps = [
     (_ARROW, None, None, None),
     ("✅",         "Human Review",     "Confidence gating",    "#d97706"),
     (_ARROW, None, None, None),
-    (ICON_DATABRICKS,   "Delta Lake",       "Bronze→Silver→Gold",   "#e63946"),
+    (ICON_DELTA_LAKE,   "Delta Lake",       "Bronze→Silver→Gold",   "#e63946"),
     (_ARROW, None, None, None),
     (ICON_GENIE,        "Genie",            "NL queries",           "#e63946"),
 ]
