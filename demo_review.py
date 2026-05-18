@@ -16,7 +16,11 @@ st.set_page_config(page_title="Review Queue", layout="wide", page_icon="✅")
 
 @st.cache_data(show_spinner=False)
 def render_page(pdf_path: str, page_num: int, quote: str) -> tuple[bytes | None, bool]:
-    """Render PDF page as PNG, highlighting the quote if found. Returns (png, found)."""
+    """
+    Render PDF page as PNG.
+    If quote is found: highlights it and crops to a full-width strip around it.
+    If not found: returns the full page at lower zoom.
+    """
     try:
         doc = fitz.open(pdf_path)
         if page_num < 1 or page_num > len(doc):
@@ -24,6 +28,8 @@ def render_page(pdf_path: str, page_num: int, quote: str) -> tuple[bytes | None,
         page = doc[page_num - 1]
 
         found = False
+        hit_rect = None
+
         if quote:
             for length in [60, 40, 20]:
                 hits = page.search_for(quote[:length].strip())
@@ -32,10 +38,26 @@ def render_page(pdf_path: str, page_num: int, quote: str) -> tuple[bytes | None,
                         annot = page.add_highlight_annot(hit)
                         annot.set_colors(stroke=[1, 0.85, 0])
                         annot.update()
+                    # Union of all hit rects
+                    hit_rect = hits[0]
+                    for h in hits[1:]:
+                        hit_rect = hit_rect | h
                     found = True
                     break
 
-        pix = page.get_pixmap(matrix=fitz.Matrix(1.8, 1.8))
+        if found and hit_rect:
+            # Full-width strip centred on the highlight, with generous vertical padding
+            pad_y = 60
+            clip = fitz.Rect(
+                0,
+                max(0, hit_rect.y0 - pad_y),
+                page.rect.width,
+                min(page.rect.height, hit_rect.y1 + pad_y),
+            )
+            pix = page.get_pixmap(matrix=fitz.Matrix(2.5, 2.5), clip=clip)
+        else:
+            pix = page.get_pixmap(matrix=fitz.Matrix(1.5, 1.5))
+
         return pix.tobytes("png"), found
     except Exception:
         return None, False
@@ -72,7 +94,7 @@ with st.sidebar:
     st.header("Queue filters")
     THRESHOLD = st.slider("Confidence threshold", 0.0, 1.0, 0.80, 0.05,
                           help="Fields below this threshold appear in the queue")
-    filter_mode = st.radio("Show", ["Needs review", "All fields", "Approved", "Rejected"])
+    filter_mode = st.radio("Show", ["All fields", "Needs review", "Approved", "Rejected"])
     asset_filter = st.multiselect(
         "Asset class",
         sorted({r["asset_class"] for r in all_items}),

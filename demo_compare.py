@@ -156,7 +156,10 @@ with col1:
     st.metric("Avg. confidence", f"{avg_ocr:.0%}")
     st.caption("Extracts text from the PDF and searches for numbers near keywords. Fast and zero-cost but brittle — any layout change breaks it.")
     n = sum(1 for v in fields.values() if ocr_confidence(v["confidence"], has_issues) < 0.7)
-    st.error(f"{n} field(s) below 70%") if n else st.success("All fields above 70%")
+    if n:
+        st.error(f"{n} field(s) below 70%")
+    else:
+        st.success("All fields above 70%")
 
 with col2:
     st.markdown("### 🔎 Regex + LLM")
@@ -166,21 +169,30 @@ with col2:
         "LLM then picks the right value and normalizes units. More reliable than pure OCR, still fails on image PDFs."
     )
     n = sum(1 for f, v in fields.items() if regex_confidence(v["confidence"], has_issues, bool(FIELD_TO_REGEX_KEY.get(f) and regex_hits.get(FIELD_TO_REGEX_KEY.get(f)))) < 0.7)
-    st.warning(f"{n} field(s) below 70%") if n else st.success("All fields above 70%")
+    if n:
+        st.warning(f"{n} field(s) below 70%")
+    else:
+        st.success("All fields above 70%")
 
 with col3:
     st.markdown("### 🔍 Doc Intelligence")
     st.metric("Avg. confidence", f"{avg_doc:.0%}", delta=f"+{avg_doc - avg_ocr:.0%} vs OCR")
     st.caption("Azure reads the document structure — tables, key-value pairs, layout — regardless of formatting. No LLM, no context understanding.")
     n = sum(1 for v in fields.values() if doc_int_confidence(v["confidence"], bool(tables)) < 0.7)
-    st.warning(f"{n} field(s) below 70%") if n else st.success("All fields above 70%")
+    if n:
+        st.warning(f"{n} field(s) below 70%")
+    else:
+        st.success("All fields above 70%")
 
 with col4:
     st.markdown("### 🤖 OpenAI (full)")
     st.metric("Avg. confidence", f"{avg_gold:.0%}", delta=f"+{avg_gold - avg_ocr:.0%} vs OCR")
     st.caption("Doc Intelligence output + full text sent to GPT-4o. Understands context, normalizes units, cites sources. Highest accuracy, costs ~€0.02/report.")
     n = sum(1 for v in fields.values() if v["confidence"] < 0.7)
-    st.warning(f"{n} field(s) below 70%") if n else st.success("All fields above 70%")
+    if n:
+        st.warning(f"{n} field(s) below 70%")
+    else:
+        st.success("All fields above 70%")
 
 # ── When each strategy fails ──────────────────────────────────────────────────
 
