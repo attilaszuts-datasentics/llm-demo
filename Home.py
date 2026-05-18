@@ -5,12 +5,16 @@ Entry point for Streamlit Community Cloud: streamlit run Home.py
 import fitz
 import streamlit as st
 from fixtures import REPORTS
-from ui import inject_brand_css, brand_footer, ICON_AZURE, ICON_OPENAI, ICON_DATABRICKS
+import base64
+from ui import inject_brand_css, brand_footer, ICON_AZURE_BLOB, ICON_AZURE_DOCINT, ICON_OPENAI, ICON_DATABRICKS, ICON_GENIE
 
-# SVG chevron — replaces → so arrows render regardless of font glyph support
-_ARROW = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22"'
-          ' fill="none" stroke="#999" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">'
-          '<polyline points="9 18 15 12 9 6"/></svg>')
+# Base64-encoded SVG arrow — img tag renders reliably regardless of font
+_ARROW_SVG = (
+    b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22"'
+    b' fill="none" stroke="#999" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">'
+    b'<polyline points="9 18 15 12 9 6"/></svg>'
+)
+_ARROW = f'<img src="data:image/svg+xml;base64,{base64.b64encode(_ARROW_SVG).decode()}" width="22" height="22">'
 
 st.set_page_config(
     page_title="Report Extraction Workshop",
@@ -183,19 +187,19 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 steps = [
-    ("📄",   "PDF Reports",    "Brokers",              "#64748b"),
+    ("📄",         "PDF Reports",      "Brokers",              "#64748b"),
     (_ARROW, None, None, None),
-    (ICON_AZURE,      "Azure Blob",       "Storage",              "#0078d4"),
+    (ICON_AZURE_BLOB,   "Azure Blob",       "Storage",              "#0078d4"),
     (_ARROW, None, None, None),
-    (ICON_AZURE,      "Doc Intelligence", "Layout & tables",      "#0078d4"),
+    (ICON_AZURE_DOCINT, "Doc Intelligence", "Layout & tables",      "#0078d4"),
     (_ARROW, None, None, None),
-    (ICON_OPENAI,     "Azure OpenAI",     "GPT-4o extraction",    "#107c10"),
+    (ICON_OPENAI,       "Azure OpenAI",     "GPT-4o extraction",    "#107c10"),
     (_ARROW, None, None, None),
-    ("✅",   "Human Review",   "Confidence gating",    "#d97706"),
+    ("✅",         "Human Review",     "Confidence gating",    "#d97706"),
     (_ARROW, None, None, None),
-    (ICON_DATABRICKS, "Delta Lake",       "Bronze→Silver→Gold",   "#e63946"),
+    (ICON_DATABRICKS,   "Delta Lake",       "Bronze→Silver→Gold",   "#e63946"),
     (_ARROW, None, None, None),
-    (ICON_DATABRICKS, "Genie",            "NL queries",           "#e63946"),
+    (ICON_GENIE,        "Genie",            "NL queries",           "#e63946"),
 ]
 
 pipe_cols = st.columns([3, 1, 3, 1, 3, 1, 3, 1, 3, 1, 3, 1, 3])

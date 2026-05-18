@@ -9,7 +9,7 @@ import json
 import pandas as pd
 import streamlit as st
 from fixtures import REPORTS, mock_doc_intelligence_response, mock_openai_response
-from ui import brand_sidebar, ICON_AZURE, ICON_OPENAI, ICON_DATABRICKS
+from ui import brand_sidebar, ICON_AZURE_BLOB, ICON_AZURE_DOCINT, ICON_OPENAI, ICON_DATABRICKS
 
 st.set_page_config(page_title="Ingestion Pipeline", layout="wide", page_icon="assets/DS_favicon_color.svg")
 brand_sidebar()
@@ -41,14 +41,14 @@ with st.sidebar:
 
 col1, col2, col3, col4 = st.columns(4)
 with col1:
-    st.markdown(ICON_AZURE + "**Azure Blob**", unsafe_allow_html=True)
+    st.markdown(ICON_AZURE_BLOB + "**Azure Blob**", unsafe_allow_html=True)
     st.markdown("Object storage  \n`reports/2025/Q1/`")
 with col2:
-    st.markdown(ICON_AZURE + "**Doc Intelligence**", unsafe_allow_html=True)
-    st.markdown("Layout + table  \nextraction")
+    st.markdown(ICON_AZURE_DOCINT + "**Doc Intelligence**", unsafe_allow_html=True)
+    st.markdown("Layout + table extraction")
 with col3:
     st.markdown(ICON_OPENAI + "**Azure OpenAI**", unsafe_allow_html=True)
-    st.markdown("GPT-4o structured  \nextraction")
+    st.markdown("GPT-4o structured extraction")
 with col4:
     st.markdown(ICON_DATABRICKS + "**Delta Lake**", unsafe_allow_html=True)
     st.markdown("Bronze → Silver → Gold")
