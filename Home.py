@@ -232,7 +232,7 @@ st.divider()
 st.markdown("## The demos")
 st.caption("Use the sidebar or click below to navigate between demos.")
 
-d1, d2, d3, d4 = st.columns(4)
+d1, d2, d3, d4, d5 = st.columns(5)
 
 with d1:
     with st.container(border=True):
@@ -257,6 +257,12 @@ with d4:
         st.markdown("### 🧞 Genie")
         st.markdown("Ask questions about the extracted data in plain English — Genie writes the SQL.")
         st.page_link("pages/4_🧞_Genie.py", label="Open demo →")
+
+with d5:
+    with st.container(border=True):
+        st.markdown("### 📚 How it works")
+        st.markdown("Prompting patterns, validation techniques, pipeline wiring, gotchas, and doc links.")
+        st.page_link("pages/5_📚_How_it_works.py", label="Open guide →")
 
 st.markdown("")
 st.caption("Workshop demo — v0. Service calls are mocked; all data is from real Q1 2025 broker reports.")
