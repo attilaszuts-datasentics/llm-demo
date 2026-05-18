@@ -171,7 +171,7 @@ st.markdown("""
     justify-content: center;
     gap: 4px;
 }
-.pipe-box img { flex-shrink: 0; }
+.pipe-box img { flex-shrink: 0; width: 32px; height: 32px; }
 .pipe-arrow {
     display: flex;
     align-items: center;
@@ -204,7 +204,7 @@ for col, (icon, title, subtitle, color) in zip(pipe_cols, steps):
             st.markdown(f'<div class="pipe-arrow">{icon}</div>', unsafe_allow_html=True)
         else:
             # icon is either an emoji string or an <img> tag
-            icon_html = icon if icon.startswith("<") else f'<span style="font-size:1.4rem">{icon}</span>'
+            icon_html = icon if icon.startswith("<") else f'<span style="font-size:2rem;line-height:1">{icon}</span>'
             st.markdown(
                 f'<div class="pipe-box" style="background:{color};">'
                 f'{icon_html}'
