@@ -1,30 +1,57 @@
 """
 Demo 3 — Human Review Queue
-Low-confidence extractions surface for analyst sign-off before entering production.
+Every extraction gets a PDF screenshot with the source highlighted.
+Analysts approve, reject, or edit values without leaving this page.
 
 Run: streamlit run demo_review.py
 """
+import fitz  # pymupdf
 import pandas as pd
 import streamlit as st
 from fixtures import REPORTS
 
 st.set_page_config(page_title="Review Queue", layout="wide", page_icon="✅")
 
-st.title("✅ Human Review Queue")
-st.caption("AI-flagged extractions awaiting analyst sign-off before writing to the Gold Delta table")
-st.divider()
+# ── PDF rendering ─────────────────────────────────────────────────────────────
 
-# ── Build the review queue from all reports ───────────────────────────────────
+@st.cache_data(show_spinner=False)
+def render_page(pdf_path: str, page_num: int, quote: str) -> tuple[bytes | None, bool]:
+    """Render PDF page as PNG, highlighting the quote if found. Returns (png, found)."""
+    try:
+        doc = fitz.open(pdf_path)
+        if page_num < 1 or page_num > len(doc):
+            page_num = 1
+        page = doc[page_num - 1]
+
+        found = False
+        if quote:
+            for length in [60, 40, 20]:
+                hits = page.search_for(quote[:length].strip())
+                if hits:
+                    for hit in hits:
+                        annot = page.add_highlight_annot(hit)
+                        annot.set_colors(stroke=[1, 0.85, 0])
+                        annot.update()
+                    found = True
+                    break
+
+        pix = page.get_pixmap(matrix=fitz.Matrix(1.8, 1.8))
+        return pix.tobytes("png"), found
+    except Exception:
+        return None, False
+
+# ── Session state ─────────────────────────────────────────────────────────────
 
 if "decisions" not in st.session_state:
-    st.session_state.decisions = {}   # key: (pdf, field) → "approved" | "rejected" | None
-if "edits" not in st.session_state:
-    st.session_state.edits = {}       # key: (pdf, field) → edited value
+    st.session_state.decisions = {}  # key → {"status": "approved"|"rejected", "value": float|None}
 
-queue_rows = []
+# ── Build queue ───────────────────────────────────────────────────────────────
+
+all_items = []
 for pdf_name, report in REPORTS.items():
     for field, meta in report["fields"].items():
-        queue_rows.append({
+        quote_text, quote_page = report["quotes"].get(field, ("", 1))
+        all_items.append({
             "pdf": pdf_name,
             "broker": report["broker"],
             "market": report["market"],
@@ -33,135 +60,147 @@ for pdf_name, report in REPORTS.items():
             "value": meta["value"],
             "unit": meta["unit"],
             "confidence": meta["confidence"],
-            "quote": report["quotes"].get(field, ("", ""))[0],
-            "page": report["quotes"].get(field, ("", ""))[1],
+            "quote": quote_text,
+            "page": quote_page if quote_page else 1,
         })
 
-df_all = pd.DataFrame(queue_rows)
-THRESHOLD = 0.80
+all_items.sort(key=lambda x: x["confidence"])
 
-# ── Sidebar filters ───────────────────────────────────────────────────────────
+# ── Sidebar ───────────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.header("Filters")
-    show_mode = st.radio(
-        "Show",
-        ["Needs review (< 80%)", "All fields", "Approved", "Rejected"],
-    )
-    selected_asset = st.multiselect(
+    st.header("Queue filters")
+    THRESHOLD = st.slider("Confidence threshold", 0.0, 1.0, 0.80, 0.05,
+                          help="Fields below this threshold appear in the queue")
+    filter_mode = st.radio("Show", ["Needs review", "All fields", "Approved", "Rejected"])
+    asset_filter = st.multiselect(
         "Asset class",
-        df_all["asset_class"].unique().tolist(),
-        default=df_all["asset_class"].unique().tolist(),
+        sorted({r["asset_class"] for r in all_items}),
+        default=sorted({r["asset_class"] for r in all_items}),
     )
+
     st.divider()
+    needs_review = [x for x in all_items if x["confidence"] < THRESHOLD]
+    decided = st.session_state.decisions
+    n_approved = sum(1 for v in decided.values() if v["status"] == "approved")
+    n_rejected = sum(1 for v in decided.values() if v["status"] == "rejected")
+    n_pending = sum(1 for x in needs_review if (x["pdf"], x["field"]) not in decided)
 
-    total = len(df_all)
-    needs_review = (df_all["confidence"] < THRESHOLD).sum()
-    approved = sum(1 for v in st.session_state.decisions.values() if v == "approved")
-    rejected = sum(1 for v in st.session_state.decisions.values() if v == "rejected")
+    st.metric("Needs review", len(needs_review))
+    st.metric("Approved", n_approved)
+    st.metric("Rejected", n_rejected)
+    if needs_review:
+        st.progress((n_approved + n_rejected) / len(needs_review),
+                    text=f"{n_approved + n_rejected}/{len(needs_review)} reviewed")
 
-    st.metric("Total fields", total)
-    st.metric("Needs review", needs_review)
-    st.metric("Approved", approved)
-    st.metric("Rejected", rejected)
-
-    progress = (approved + rejected) / max(needs_review, 1)
-    st.progress(progress, text=f"Review progress: {progress:.0%}")
-
-    if approved + rejected == needs_review and needs_review > 0:
-        if st.button("🚀  Commit approved to Delta Lake", type="primary", use_container_width=True):
+    st.divider()
+    if n_pending == 0 and needs_review:
+        if st.button("🚀  Commit to Delta Lake", type="primary", use_container_width=True):
             st.session_state["committed"] = True
 
-# ── Filter data ───────────────────────────────────────────────────────────────
+# ── Filter ────────────────────────────────────────────────────────────────────
 
-df_filtered = df_all[df_all["asset_class"].isin(selected_asset)]
-
-if show_mode == "Needs review (< 80%)":
-    df_filtered = df_filtered[df_filtered["confidence"] < THRESHOLD]
-elif show_mode == "Approved":
-    keys = {(k[0], k[1]) for k, v in st.session_state.decisions.items() if v == "approved"}
-    df_filtered = df_filtered[df_filtered.apply(lambda r: (r["pdf"], r["field"]) in keys, axis=1)]
-elif show_mode == "Rejected":
-    keys = {(k[0], k[1]) for k, v in st.session_state.decisions.items() if v == "rejected"}
-    df_filtered = df_filtered[df_filtered.apply(lambda r: (r["pdf"], r["field"]) in keys, axis=1)]
-
-df_filtered = df_filtered.sort_values("confidence")
-
-# ── Review rows ───────────────────────────────────────────────────────────────
-
-if df_filtered.empty:
-    st.info("No items to show for the current filter.")
+if filter_mode == "Needs review":
+    items = [x for x in all_items if x["confidence"] < THRESHOLD and x["asset_class"] in asset_filter]
+elif filter_mode == "Approved":
+    items = [x for x in all_items if decided.get((x["pdf"], x["field"]), {}).get("status") == "approved" and x["asset_class"] in asset_filter]
+elif filter_mode == "Rejected":
+    items = [x for x in all_items if decided.get((x["pdf"], x["field"]), {}).get("status") == "rejected" and x["asset_class"] in asset_filter]
 else:
-    for _, row in df_filtered.iterrows():
-        key = (row["pdf"], row["field"])
-        decision = st.session_state.decisions.get(key)
+    items = [x for x in all_items if x["asset_class"] in asset_filter]
 
-        conf = row["confidence"]
-        if conf >= 0.9:
-            badge = "🟢"
-        elif conf >= 0.7:
-            badge = "🟡"
-        else:
-            badge = "🔴"
+# ── Header ────────────────────────────────────────────────────────────────────
 
-        border_color = "#2e7d32" if decision == "approved" else "#c62828" if decision == "rejected" else "#555"
-        with st.container(border=True):
-            top_left, top_right = st.columns([5, 2])
-            with top_left:
-                st.markdown(
-                    f"**{row['field']}** &nbsp; `{row['broker']}` &nbsp; `{row['market']}` &nbsp; `{row['asset_class']}`"
-                )
-            with top_right:
-                st.markdown(f"{badge} Confidence: **{conf:.0%}**")
+st.title("✅ Human Review Queue")
+st.caption(
+    "Every extraction is shown with its source highlighted in the original document. "
+    "Approve, reject, or correct the value — without opening the PDF."
+)
+st.divider()
 
-            val_col, quote_col = st.columns([2, 4])
-            with val_col:
-                edited = st.session_state.edits.get(key, row["value"])
-                new_val = st.number_input(
-                    f"Value ({row['unit']})",
-                    value=float(edited) if isinstance(edited, (int, float)) else float(row["value"]),
-                    key=f"val_{key}",
-                    label_visibility="visible",
-                )
-                if new_val != row["value"]:
-                    st.session_state.edits[key] = new_val
+if not items:
+    st.success("Nothing to show for the current filter.")
+    st.stop()
 
-            with quote_col:
-                if row["quote"]:
-                    st.markdown(f"**Source quote** (p. {row['page']}):")
-                    st.markdown(f"> {row['quote']}")
-                else:
-                    st.caption("No source quote available — value may come from a chart or image.")
+# ── Review cards ──────────────────────────────────────────────────────────────
 
-            btn_col1, btn_col2, btn_col3 = st.columns([1, 1, 4])
-            with btn_col1:
-                if st.button("✅ Approve", key=f"approve_{key}", type="primary" if decision != "approved" else "secondary"):
-                    st.session_state.decisions[key] = "approved"
+for item in items:
+    key = (item["pdf"], item["field"])
+    decision = decided.get(key, {})
+
+    conf = item["confidence"]
+    badge = "🟢" if conf >= 0.9 else "🟡" if conf >= 0.7 else "🔴"
+
+    with st.container(border=True):
+        # ── Card header ───────────────────────────────────────────────────────
+        h1, h2 = st.columns([5, 2])
+        with h1:
+            st.markdown(
+                f"**{item['field']}** &nbsp;·&nbsp; "
+                f"`{item['broker']}` &nbsp;·&nbsp; "
+                f"`{item['market']}` &nbsp;·&nbsp; "
+                f"`{item['asset_class']}`"
+            )
+        with h2:
+            status_label = ""
+            if decision.get("status") == "approved":
+                status_label = "✅ Approved"
+            elif decision.get("status") == "rejected":
+                status_label = "❌ Rejected"
+            st.markdown(f"{badge} **{conf:.0%}** &nbsp; {status_label}")
+
+        # ── Main body: edit on left, PDF on right ─────────────────────────────
+        left, right = st.columns([1, 2])
+
+        with left:
+            current_val = decision.get("value", item["value"])
+            new_val = st.number_input(
+                f"Value ({item['unit']})",
+                value=float(current_val) if current_val is not None else float(item["value"]),
+                key=f"val_{key}",
+            )
+
+            b1, b2 = st.columns(2)
+            with b1:
+                if st.button("✅ Approve", key=f"ok_{key}", type="primary"):
+                    st.session_state.decisions[key] = {"status": "approved", "value": new_val}
                     st.rerun()
-            with btn_col2:
-                if st.button("❌ Reject", key=f"reject_{key}"):
-                    st.session_state.decisions[key] = "rejected"
+            with b2:
+                if st.button("❌ Reject", key=f"no_{key}"):
+                    st.session_state.decisions[key] = {"status": "rejected", "value": None}
                     st.rerun()
-            with btn_col3:
-                if decision == "approved":
-                    st.success("Approved")
-                elif decision == "rejected":
-                    st.error("Rejected — will not enter production")
 
-# ── Commit confirmation ───────────────────────────────────────────────────────
+            if decision.get("status") == "approved" and decision.get("value") != item["value"]:
+                st.info(f"Value corrected: {item['value']} → {decision['value']} {item['unit']}")
+
+        with right:
+            img, found = render_page(item["pdf"], item["page"], item["quote"])
+            if img:
+                caption = (
+                    f"Page {item['page']} — quote highlighted"
+                    if found
+                    else f"Page {item['page']} — quote not found in text layer (image-based PDF)"
+                )
+                st.caption(caption)
+                st.image(img, use_container_width=True)
+                if item["quote"]:
+                    st.markdown(f"> *\"{item['quote'][:120]}\"*")
+            else:
+                st.warning("Could not render PDF page.")
+
+# ── Commit view ───────────────────────────────────────────────────────────────
 
 if st.session_state.get("committed"):
     st.divider()
-    approved_rows = [
-        row for _, row in df_all.iterrows()
-        if st.session_state.decisions.get((row["pdf"], row["field"])) == "approved"
+    approved = [
+        {**x, "final_value": decided[(x["pdf"], x["field"])]["value"]}
+        for x in all_items
+        if decided.get((x["pdf"], x["field"]), {}).get("status") == "approved"
     ]
-    if approved_rows:
-        st.success(f"**{len(approved_rows)} fields committed to `gold.real_estate_metrics` Delta table.**")
+    if approved:
+        st.success(f"**{len(approved)} fields written to `gold.real_estate_metrics`**")
         st.dataframe(
-            pd.DataFrame(approved_rows)[["broker", "market", "asset_class", "field", "value", "unit"]],
+            pd.DataFrame(approved)[["broker", "market", "asset_class", "field", "final_value", "unit"]],
             hide_index=True,
             use_container_width=True,
         )
-    else:
-        st.info("No approved fields to commit.")

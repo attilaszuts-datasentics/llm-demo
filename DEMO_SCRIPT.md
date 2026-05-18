@@ -51,38 +51,38 @@ Hold up (or screen-share) one of the PDFs. Point out:
 > "Not all extraction approaches are equal. Let me show you what happens if we use different techniques on the same report."
 
 1. Select **CZ_Office_Q12025_Savills**, click **▶ Compare strategies**.
-2. Point at the three columns:
-   - **Raw OCR** — "Just reading the text, using pattern matching. Works on simple PDFs, breaks on anything complex."
-   - **Document Intelligence** — "Much better on structured reports. Still misses context."
-   - **Azure OpenAI** — "Highest accuracy, and crucially — it can tell you *where* it found the number."
-3. Toggle on **Show source quotes** if not already on. Point at a quote. "Every value has a citation. We can verify it."
+2. Walk across the four columns left to right — this is the progression from simple to smart:
+   - **Raw OCR** — "Just reading the text and searching for numbers. Zero AI, zero cost. Works on clean PDFs."
+   - **Regex + LLM** — "One step smarter: regular expressions scan the text for candidate values — yields, vacancies, rents — and then the LLM picks the right one and normalizes the unit." Click the **"All regex candidates"** expander. "These are the raw matches before the LLM touched them."
+   - **Doc Intelligence** — "Azure reads the document structure — tables, key-value pairs — regardless of layout. No LLM, just structural parsing."
+   - **Azure OpenAI** — "Highest accuracy. Understands context, normalizes units, and crucially — every value comes with a source quote so you can verify it."
+3. Toggle on **Show source quotes**. Point at a quote. "The model is forced to cite exactly where it found each number."
 
-4. Switch to **AT_Retail_Q12025_CBRE**.
-   > "Same three strategies, different report. Raw OCR basically fails. Doc Intelligence fails too — no tables to read. OpenAI does better but confidence is still low because the information just isn't in the text."
+4. Switch to **AT_Retail_Q12025_CBRE** and run again.
+   > "Same four strategies, but this report is mostly images. OCR gets nothing. Regex gets nothing. Doc Intelligence gets nothing. Even OpenAI is low-confidence because the information isn't in the text layer at all." Point at the red badges across the row.
 
-5. Scroll down to "When does each strategy struggle?"
-   > "The honest answer is: no single approach wins everywhere. A production system combines all three — use Doc Intelligence to pre-process, OpenAI to extract and verify, and always surface what it isn't sure about."
+5. Scroll to "When does each strategy struggle?"
+   > "No single approach wins everywhere. A production system layers them: Doc Intelligence for structure, regex as a sanity check, OpenAI for understanding, schema validation as a safety net."
 
 ---
 
 ## Part 4 — Human review (4 min)
 **Tab: `http://localhost:8503`**
 
-> "So what happens to the fields the system isn't confident about?"
+> "So what happens to the fields the system isn't confident about? This is the key idea: the analyst never has to open the original PDF."
 
-1. The queue loads showing low-confidence fields sorted to the top (🔴 first).
-2. Point at the top items — they're mostly from CBRE and Knight Frank.
-   > "These are exactly the two reports we just saw struggle. The system is correctly routing them here."
-3. Click on a field that has a source quote. Read the quote aloud.
-   > "The reviewer doesn't need to go back to the PDF. The exact sentence the AI used is right there. They can check it in two seconds."
-4. Click **✅ Approve**.
-5. Click on a field with no source quote (one of the CBRE ones).
-   > "No quote — means the value came from a chart or an image. The AI is guessing. This one we'd reject and verify manually."
+1. The queue loads with low-confidence fields at the top (🔴 first).
+2. Point at the first card. Point at the right side of the card.
+   > "On the right: that's the actual PDF page. The yellow highlight shows exactly where the AI found this number. The quote is reprinted below it. The analyst can see the source right here."
+3. Point at a Savills or Colliers card where the highlight is visible.
+   > "This is a clean extraction — the quote is highlighted in the document, the value matches. Easy to approve."
+4. Edit the value in the number input, then click **✅ Approve**.
+   > "And if the analyst thinks the number is slightly off — say it was misread — they can correct it here before approving. The corrected value is what goes to the Gold table."
+5. Find a CBRE or Knight Frank card (no highlight, no quote).
+   > "This one has no highlight — the PDF is image-based, no text to search. The system is honest about that. This one we reject."
 6. Click **❌ Reject**.
-7. Point at the sidebar progress bar.
-   > "High-confidence fields — above 80% — are auto-approved and never appear here. Analysts only review the tail. In practice, for a clean report like Savills, the queue is empty."
-8. Point at the **Commit to Delta Lake** button.
-   > "Once everything is reviewed, one click writes the approved fields to the Gold table. Rejected ones stay out."
+7. Point at the sidebar progress bar filling.
+   > "Once everything's reviewed, the Commit button appears. One click, approved fields go to production. Rejected ones stay out."
 
 ---
 
