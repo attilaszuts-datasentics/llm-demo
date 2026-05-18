@@ -30,7 +30,7 @@ def thumbnail(pdf_path: str, width_px: int = 200) -> bytes | None:
 
 st.markdown("""
 <h1 style="font-size:2.6rem; margin-bottom:0.2rem;">
-    Extracting Data from Reports with AI
+    LLMs for Deterministic Data
 </h1>
 <p style="font-size:1.2rem; color:#888; margin-top:0;">
     Azure Document Intelligence &nbsp;·&nbsp; Azure OpenAI &nbsp;·&nbsp; Databricks
@@ -39,23 +39,47 @@ st.markdown("""
 
 st.divider()
 
-# ── Section 1: The problem ────────────────────────────────────────────────────
+# ── Section 1: The real question ──────────────────────────────────────────────
 
-st.markdown("## The problem")
+st.markdown("## The question")
+
+col_q, col_gap = st.columns([3, 1])
+with col_q:
+    st.markdown("""
+LLMs are good at generating, summarising, and reasoning — tasks where
+**close enough is good enough**. But a large class of real-world problems
+needs something different: a specific number, in a specific unit, that can
+be traced back to a specific source. Not a paraphrase. Not an approximation.
+The actual answer.
+
+This workshop is about that tension — **how do you use LLMs when the output
+has to be deterministic, structured, and verifiable?** — and the techniques
+that make it work: grounding, validation, self-consistency, and human-in-the-loop review.
+""")
+
+st.divider()
+
+# ── Section 2: The concrete example ──────────────────────────────────────────
+
+st.markdown("## A concrete example")
 
 col_text, col_gap = st.columns([3, 1])
 with col_text:
     st.markdown("""
-Every quarter, real estate analysts receive market reports from **10+ brokers**
-across multiple markets and asset classes. Each report is different — different
-layout, different language, sometimes barely any extractable text at all.
+Every quarter, real estate teams receive market reports from **10+ brokers**
+across multiple markets and asset classes. Someone needs to extract a handful
+of KPIs from each one — prime yield, vacancy rate, take-up volume — and
+land them in a structured table.
 
-Someone has to read every one of them and type the numbers into a spreadsheet.
-That's slow, error-prone, and doesn't scale.
+The answer has to be **exactly right**: 7.0%, not 7%, not "around 7", not the
+figure from last quarter. And it needs to be traceable — if a number is wrong,
+you need to know which page it came from.
+
+This is the problem. The reports below are the actual source material.
 """)
 
 # Report thumbnail grid
-st.markdown("#### The actual reports — all different, all arriving the same week")
+st.markdown("#### The source material — 7 reports, 4 brokers, 2 languages, 4 asset classes, arriving the same week")
 
 REPORT_META = {
     "CZ_Office_Q12025_Savills.pdf":              ("Savills",             "CZ · Office",      "Clean tables"),
@@ -83,42 +107,46 @@ for col, (pdf_name, (broker, market, note)) in zip(thumb_cols, REPORT_META.items
 
 st.divider()
 
-# ── Section 2: Why it's hard ──────────────────────────────────────────────────
+# ── Section 3: Why LLMs alone aren't enough ──────────────────────────────────
 
-st.markdown("## Why it's hard")
+st.markdown("## Why LLMs alone aren't enough")
 
 c1, c2, c3 = st.columns(3)
 with c1:
     with st.container(border=True):
-        st.markdown("### 📐 Every report is different")
+        st.markdown("### 🎲 They're probabilistic")
         st.markdown("""
-        Vacancy rate is in the headline of one report, buried in a footnote
-        in another, and inferred from a chart in a third.
-        Rule-based extraction breaks the moment a broker updates their template.
+        Ask the same question twice, get slightly different answers.
+        For a summary that's fine. For a yield that feeds a pricing model,
+        it isn't. You need to know when to trust the output — and when not to.
         """)
 with c2:
     with st.container(border=True):
-        st.markdown("### 🖼️ Data hidden in images")
+        st.markdown("### 👻 They hallucinate")
         st.markdown("""
-        Several brokers produce reports that are effectively PDFs of images —
-        the numbers exist visually but there is no text layer to read.
-        Standard text extraction returns nothing.
+        If the information isn't clearly in the text, the model will often
+        invent a plausible-sounding value rather than say it doesn't know.
+        A hallucinated vacancy rate looks identical to a real one in the output.
         """)
 with c3:
     with st.container(border=True):
-        st.markdown("### 🌍 Multiple languages & formats")
+        st.markdown("### 📦 They don't cite by default")
         st.markdown("""
-        Reports arrive in English, German, and Czech.
-        Yields written as `5,00%`, `500 bps`, or `5.0 percent`.
-        Units switch between sqm/month and sqm/year without warning.
+        A number without a source is unverifiable. If an extracted figure is
+        wrong, you can't tell whether the model misread the document, picked
+        up a figure from the wrong year, or made it up entirely.
         """)
 
 st.divider()
 
 # ── Section 3: The solution ───────────────────────────────────────────────────
 
-st.markdown("## The solution")
-st.markdown("A pipeline that combines Azure AI services with a human review step before data lands in a governed Delta table.")
+st.markdown("## Making LLMs deterministic enough")
+st.markdown(
+    "The answer isn't to avoid LLMs — it's to wrap them with structure. "
+    "Force citations. Validate outputs against a schema. Run extraction multiple times and measure agreement. "
+    "Gate anything uncertain behind a human. The pipeline below is what that looks like in practice."
+)
 
 st.markdown("""
 <style>
