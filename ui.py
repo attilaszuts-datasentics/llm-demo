@@ -9,6 +9,7 @@ _ROOT = Path(__file__).parent / "assets"
 _LOGO_PATH   = str(_ROOT / "DataSentics_a_Bull_company_white.svg")
 _BULL_B64    = base64.b64encode((_ROOT / "bull_logo.svg").read_bytes()).decode()
 _BULL_IMG_SM = f'<img src="data:image/svg+xml;base64,{_BULL_B64}" width="120" style="display:block;">'
+_GENIE_B64   = base64.b64encode((_ROOT / "genie-icon.svg").read_bytes()).decode()
 
 # Embed Tosh fonts as base64 so they work without a static file server
 _FONTS_DIR = _ROOT / "fonts"
@@ -132,25 +133,42 @@ button[data-baseweb="tab"][aria-selected="true"] {{
 """
 
 # JavaScript: inject 🏠 before the first sidebar nav link (Home)
-_HOME_ICON_JS = """
+# and replace the 🧞 emoji on the Genie link with the SVG icon
+_HOME_ICON_JS = f"""
 <script>
-(function() {
-    function run() {
-        try {
+(function() {{
+    var GENIE_SRC = 'data:image/svg+xml;base64,{_GENIE_B64}';
+    function run() {{
+        try {{
             var doc = window.parent.document;
             var links = doc.querySelectorAll('[data-testid="stSidebarNavLink"]');
-            if (!links.length) { setTimeout(run, 300); return; }
+            if (!links.length) {{ setTimeout(run, 300); return; }}
+
+            // 🏠 on Home
             var first = links[0];
-            if (!first.dataset.homeIcon) {
+            if (!first.dataset.homeIcon) {{
                 first.insertAdjacentHTML('afterbegin',
                     '<span style="margin-right:5px;">🏠</span>');
                 first.dataset.homeIcon = '1';
-            }
-        } catch(e) {}
-    }
+            }}
+
+            // SVG on Genie — replace 🧞 in-place inside the text span
+            links.forEach(function(link) {{
+                if (link.dataset.genieIcon) return;
+                if (!link.textContent.includes('Genie')) return;
+                var span = link.querySelector('span') || link;
+                span.innerHTML = span.innerHTML.replace(
+                    '🧞',
+                    '<img src="' + GENIE_SRC + '" width="18" height="18" ' +
+                    'style="vertical-align:middle;margin-right:2px;">'
+                );
+                link.dataset.genieIcon = '1';
+            }});
+        }} catch(e) {{}}
+    }}
     run();
     setTimeout(run, 800);
-})();
+}})();
 </script>
 """
 

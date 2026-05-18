@@ -84,12 +84,8 @@ GENIE_QA = [
 
 # ── UI ────────────────────────────────────────────────────────────────────────
 
-col_logo, col_title = st.columns([1, 8])
-with col_logo:
-    st.markdown("")
-with col_title:
-    st.title("Databricks Genie")
-    st.caption("Ask questions about the extracted real estate data in plain English — Genie writes the SQL for you.")
+st.title("Databricks Genie")
+st.caption("Ask questions about the extracted real estate data in plain English — Genie writes the SQL for you.")
 
 st.divider()
 
