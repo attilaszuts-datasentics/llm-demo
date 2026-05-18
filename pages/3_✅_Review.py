@@ -228,5 +228,3 @@ if st.session_state.get("committed"):
             hide_index=True,
             use_container_width=True,
         )
-
-brand_footer()

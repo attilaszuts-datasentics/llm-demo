@@ -522,5 +522,3 @@ with tabs[5]:
         "Azure OpenAI docs now live under the Azure AI Foundry path (`/azure/foundry/openai/`). "
         "All Databricks links use the Azure Databricks docs (`learn.microsoft.com/en-us/azure/databricks/`)."
     )
-
-brand_footer()

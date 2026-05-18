@@ -200,5 +200,3 @@ elif qa["result"] is not None:
 
 st.markdown("#### Genie's interpretation")
 st.info(qa["explanation"])
-
-brand_footer()

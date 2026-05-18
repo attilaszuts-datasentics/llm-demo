@@ -9,7 +9,7 @@ import json
 import pandas as pd
 import streamlit as st
 from fixtures import REPORTS, mock_doc_intelligence_response, mock_openai_response
-from ui import brand_sidebar, brand_footer
+from ui import brand_sidebar, ICON_AZURE, ICON_OPENAI, ICON_DATABRICKS
 
 st.set_page_config(page_title="Ingestion Pipeline", layout="wide", page_icon="assets/DS_favicon_color.svg")
 brand_sidebar()
@@ -41,17 +41,17 @@ with st.sidebar:
 
 col1, col2, col3, col4 = st.columns(4)
 with col1:
-    st.markdown("### ☁️ Azure Blob")
+    st.markdown(ICON_AZURE + "**Azure Blob**", unsafe_allow_html=True)
     st.markdown("Object storage  \n`reports/2025/Q1/`")
 with col2:
-    st.markdown("### 🔍 Doc Intelligence")
+    st.markdown(ICON_AZURE + "**Doc Intelligence**", unsafe_allow_html=True)
     st.markdown("Layout + table  \nextraction")
 with col3:
-    st.markdown("### 🤖 Azure OpenAI")
+    st.markdown(ICON_OPENAI + "**Azure OpenAI**", unsafe_allow_html=True)
     st.markdown("GPT-4o structured  \nextraction")
 with col4:
-    st.markdown("### 🏔️ Delta Lake")
-    st.markdown("Bronze → Silver  \n→ Gold tables")
+    st.markdown(ICON_DATABRICKS + "**Delta Lake**", unsafe_allow_html=True)
+    st.markdown("Bronze → Silver → Gold")
 
 st.divider()
 
@@ -61,7 +61,7 @@ if not run_btn:
 
 # ── Step 1: Azure Blob Storage ───────────────────────────────────────────────
 
-with st.status("☁️  Step 1 — Uploading to Azure Blob Storage...", expanded=True) as s1:
+with st.status("Step 1 — Uploading to Azure Blob Storage...", expanded=True) as s1:
     time.sleep(0.6)
     container = "real-estate-reports"
     blob_path = f"raw/2025/Q1/{pdf_name}"
@@ -75,11 +75,11 @@ with st.status("☁️  Step 1 — Uploading to Azure Blob Storage...", expanded
 | Tier | Hot |
 | Redundancy | GRS |
 """)
-    s1.update(label="☁️  Step 1 — Azure Blob Storage  ✅", state="complete")
+    s1.update(label="Step 1 — Azure Blob Storage  ✅", state="complete")
 
 # ── Step 2: Azure Document Intelligence ─────────────────────────────────────
 
-with st.status("🔍  Step 2 — Azure Document Intelligence: analyzing layout...", expanded=True) as s2:
+with st.status("Step 2 — Azure Document Intelligence: analyzing layout...", expanded=True) as s2:
     time.sleep(1.2)
     doc_resp = mock_doc_intelligence_response(pdf_name)
 
@@ -97,11 +97,11 @@ with st.status("🔍  Step 2 — Azure Document Intelligence: analyzing layout..
     else:
         st.warning("No structured tables detected — document appears to be image-based. Falling back to OCR text only.")
 
-    s2.update(label="🔍  Step 2 — Azure Document Intelligence  ✅", state="complete")
+    s2.update(label="Step 2 — Azure Document Intelligence  ✅", state="complete")
 
 # ── Step 3: Azure OpenAI ─────────────────────────────────────────────────────
 
-with st.status("🤖  Step 3 — Azure OpenAI (GPT-4o): extracting structured metrics...", expanded=True) as s3:
+with st.status("Step 3 — Azure OpenAI (GPT-4o): extracting structured metrics...", expanded=True) as s3:
     time.sleep(1.0)
     oai_resp = mock_openai_response(pdf_name)
 
@@ -113,11 +113,11 @@ with st.status("🤖  Step 3 — Azure OpenAI (GPT-4o): extracting structured me
     st.markdown("**Extracted JSON:**")
     st.json(oai_resp["extracted"])
 
-    s3.update(label="🤖  Step 3 — Azure OpenAI  ✅", state="complete")
+    s3.update(label="Step 3 — Azure OpenAI  ✅", state="complete")
 
 # ── Step 4: Databricks Delta Lake ────────────────────────────────────────────
 
-with st.status("🏔️  Step 4 — Writing to Databricks Delta Lake...", expanded=True) as s4:
+with st.status("Step 4 — Writing to Databricks Delta Lake...", expanded=True) as s4:
     time.sleep(0.8)
 
     fields = report["fields"]
@@ -154,7 +154,7 @@ with st.status("🏔️  Step 4 — Writing to Databricks Delta Lake...", expand
             st.warning(f"{len(flagged)} field(s) below confidence threshold — held for human review")
             st.dataframe(flagged, hide_index=True, use_container_width=True)
 
-    s4.update(label="🏔️  Step 4 — Databricks Delta Lake  ✅", state="complete")
+    s4.update(label="Step 4 — Databricks Delta Lake  ✅", state="complete")
 
 # ── Summary ──────────────────────────────────────────────────────────────────
 
@@ -167,5 +167,3 @@ col1.metric("Fields extracted", len(report["fields"]))
 col2.metric("Auto-approved", valid_count)
 col3.metric("Flagged for review", flagged_count)
 col4.metric("Pipeline duration", "~3.6s")
-
-brand_footer()

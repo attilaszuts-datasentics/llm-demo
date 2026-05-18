@@ -217,5 +217,3 @@ with c4:
 
 if report.get("validation_issues"):
     st.warning("**This report:** " + "  \n".join(report["validation_issues"]))
-
-brand_footer()

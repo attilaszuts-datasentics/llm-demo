@@ -5,7 +5,7 @@ Entry point for Streamlit Community Cloud: streamlit run Home.py
 import fitz
 import streamlit as st
 from fixtures import REPORTS
-from ui import inject_brand_css, brand_footer
+from ui import inject_brand_css, brand_footer, ICON_AZURE, ICON_OPENAI, ICON_DATABRICKS
 
 st.set_page_config(
     page_title="Report Extraction Workshop",
@@ -178,19 +178,19 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 steps = [
-    ("📄", "PDF Reports",            "Brokers",                 "#64748b"),
-    ("→", None, None, None),
-    ("☁️", "Azure Blob",             "Storage",                  "#0078d4"),
-    ("→", None, None, None),
-    ("🔍", "Document<br>Intelligence","Layout & tables",          "#0078d4"),
-    ("→", None, None, None),
-    ("🤖", "Azure OpenAI",           "GPT-4o extraction",        "#107c10"),
-    ("→", None, None, None),
-    ("✅", "Human Review",           "Confidence gating",        "#d97706"),
-    ("→", None, None, None),
-    ("🏔️", "Delta Lake",             "Bronze→Silver→Gold",       "#e63946"),
-    ("→", None, None, None),
-    ("🧞", "Genie",                  "NL queries",               "#e63946"),
+    ("📄", "PDF Reports",             "Brokers",                "#64748b"),
+    ("→",  None, None, None),
+    (ICON_AZURE,       "Azure Blob",              "Storage",                "#0078d4"),
+    ("→",  None, None, None),
+    (ICON_AZURE,       "Doc Intelligence",        "Layout & tables",        "#0078d4"),
+    ("→",  None, None, None),
+    (ICON_OPENAI,      "Azure OpenAI",            "GPT-4o extraction",      "#107c10"),
+    ("→",  None, None, None),
+    ("✅", "Human Review",            "Confidence gating",      "#d97706"),
+    ("→",  None, None, None),
+    (ICON_DATABRICKS,  "Delta Lake",              "Bronze→Silver→Gold",     "#e63946"),
+    ("→",  None, None, None),
+    (ICON_DATABRICKS,  "Genie",                   "NL queries",             "#e63946"),
 ]
 
 pipe_cols = st.columns([3, 1, 3, 1, 3, 1, 3, 1, 3, 1, 3, 1, 3])
@@ -199,9 +199,11 @@ for col, (icon, title, subtitle, color) in zip(pipe_cols, steps):
         if title is None:
             st.markdown(f'<div class="pipe-arrow">{icon}</div>', unsafe_allow_html=True)
         else:
+            # icon is either an emoji string or an <img> tag
+            icon_html = icon if icon.startswith("<") else f'<span style="font-size:1.4rem">{icon}</span>'
             st.markdown(
                 f'<div class="pipe-box" style="background:{color};">'
-                f'<span style="font-size:1.4rem">{icon}</span>'
+                f'{icon_html}'
                 f'<strong>{title}</strong>'
                 f'<span style="opacity:0.85">{subtitle}</span>'
                 f'</div>',

@@ -7,12 +7,25 @@ import streamlit as st
 _ROOT = Path(__file__).parent / "assets"
 _LOGO_PATH   = str(_ROOT / "DataSentics_a_Bull_company_white.svg")
 _BULL_B64    = base64.b64encode((_ROOT / "bull_logo.svg").read_bytes()).decode()
-_BULL_IMG_SM = f'<img src="data:image/svg+xml;base64,{_BULL_B64}" width="80" style="display:block;">'
+_BULL_IMG_SM = f'<img src="data:image/svg+xml;base64,{_BULL_B64}" width="60" style="display:block;">'
 
 # Embed Tosh fonts as base64 so they work without a static file server
 _FONTS_DIR = _ROOT / "fonts"
 _TOSH_BLACK_B64  = base64.b64encode((_FONTS_DIR / "ToshA-Black.woff2").read_bytes()).decode()
 _TOSH_MEDIUM_B64 = base64.b64encode((_FONTS_DIR / "ToshA-Medium.woff2").read_bytes()).decode()
+
+# Service logos for pipeline diagrams
+def _svg_b64(name: str) -> str:
+    return base64.b64encode((_ROOT / name).read_bytes()).decode()
+
+def svc_icon(name: str, size: int = 36) -> str:
+    """Return an <img> tag for a service logo SVG from assets/."""
+    b64 = _svg_b64(name)
+    return f'<img src="data:image/svg+xml;base64,{b64}" width="{size}" height="{size}" style="display:block;margin:0 auto 2px;">'
+
+ICON_AZURE       = svc_icon("azure-icon.svg")
+ICON_OPENAI      = svc_icon("openai-icon.svg")
+ICON_DATABRICKS  = svc_icon("databricks-icon.svg")
 
 _CSS = f"""
 <style>
@@ -34,7 +47,12 @@ _CSS = f"""
 
 /* ── Global typography ───────────────────────────────────────────────── */
 body, p, span, div, label, button, input, textarea, select {{
-    font-family: 'Lexend', sans-serif !important;
+    font-family: 'Lexend', system-ui, -apple-system, sans-serif !important;
+}}
+
+/* Arrow characters — force system font so glyphs always render */
+.pipe-arrow {{
+    font-family: system-ui, -apple-system, sans-serif !important;
 }}
 h1, h2, h3 {{
     font-family: 'ToshA', sans-serif !important;
@@ -50,14 +68,8 @@ h4, h5, h6 {{
 section[data-testid="stSidebar"] {{
     background-color: #002870 !important;
 }}
-section[data-testid="stSidebar"] p,
-section[data-testid="stSidebar"] span,
-section[data-testid="stSidebar"] label,
-section[data-testid="stSidebar"] .stMarkdown,
-section[data-testid="stSidebar"] .stSelectbox label,
-section[data-testid="stSidebar"] .stRadio label,
-section[data-testid="stSidebar"] .stSlider label,
-section[data-testid="stSidebar"] .stMultiSelect label {{
+/* Make all sidebar content white — catch-all for Streamlit's dynamic elements */
+section[data-testid="stSidebar"] * {{
     color: rgba(255, 255, 255, 0.9) !important;
 }}
 section[data-testid="stSidebar"] a,
@@ -69,6 +81,10 @@ section[data-testid="stSidebarNavLink"]:hover {{
 }}
 section[data-testid="stSidebar"] hr {{
     border-color: rgba(255, 255, 255, 0.15) !important;
+}}
+/* Warning/error/info boxes in sidebar — keep their background, just ensure text is visible */
+section[data-testid="stSidebar"] [data-testid="stNotification"] * {{
+    color: inherit !important;
 }}
 
 /* ── Primary buttons → Bull orange ──────────────────────────────────── */
@@ -98,14 +114,17 @@ button[data-baseweb="tab"][aria-selected="true"] {{
     color: #FF5539 !important;
 }}
 
-/* ── Footer strip ────────────────────────────────────────────────────── */
+/* ── Footer — fixed bottom-right watermark ───────────────────────────── */
 .ds-footer {{
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding-top: 16px;
-    margin-top: 40px;
-    border-top: 1px solid #e8e0db;
+    position: fixed;
+    bottom: 16px;
+    right: 24px;
+    z-index: 9999;
+    opacity: 0.65;
+    transition: opacity 0.2s;
+}}
+.ds-footer:hover {{
+    opacity: 1;
 }}
 </style>
 """
@@ -116,11 +135,12 @@ def inject_brand_css() -> None:
 
 
 def brand_sidebar() -> None:
-    """Logo pinned to top of sidebar via st.logo(), dark navy background."""
+    """Logo pinned to top of sidebar; injects CSS and fixed footer watermark."""
     inject_brand_css()
     st.logo(_LOGO_PATH, size="large")
+    brand_footer()
 
 
 def brand_footer() -> None:
-    """Footer strip with Bull logo."""
+    """Fixed bottom-right Bull logo watermark."""
     st.markdown(f'<div class="ds-footer">{_BULL_IMG_SM}</div>', unsafe_allow_html=True)
